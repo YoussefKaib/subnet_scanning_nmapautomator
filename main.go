@@ -18,8 +18,6 @@ var (
 )
 
 func init() {
-	numWorkers = flag.Int("numWorkers", 3, "numberOfWorker")
-	subnet = flag.String("subnet", " ", "a string")
 	scanType = flag.String("scanType", "Basic", "a string")
 	flag.Parse()
 }
@@ -51,7 +49,7 @@ func main() {
 		log.Fatal("failed change to root project directory error: ", err)
 	}
 
-	ips := ipList(subnet)
+	ips := ipList()
 
 	// In order to use our pool of workers we need to send
 	// them work and collect their results. We make 2
@@ -68,7 +66,7 @@ func main() {
 
 	// Here we send 5 `jobs` and then `close` that
 	// channel to indicate that's all the work we have.
-	for j := 1; j <= *numWorkers; j++ {
+	for j := 1; j <= len(ips); j++ {
 		jobs <- j
 	}
 	close(jobs)
@@ -79,14 +77,8 @@ func main() {
 	wg.Wait()
 }
 
-func ipList(subnet *string) []string {
+func ipList() []string {
 	listIPs := []string{}
-	command := `nmap -sL -n ` + *subnet + ` | grep 'Nmap scan report for' | cut -f 5 -d ' ' > targets.txt`
-	_, err := exec.Command("/bin/sh", "-c", command).Output()
-	if err != nil {
-		log.Fatal(err.Error())
-	}
-
 	file, _ := os.Open(path + "targets.txt")
 
 	defer file.Close()
